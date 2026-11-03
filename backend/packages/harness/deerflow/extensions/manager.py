@@ -116,6 +116,14 @@ def _read_optional_bytes(path: Path) -> bytes | None:
     return path.read_bytes() if path.is_file() else None
 
 
+def _require_unmanaged_installation() -> None:
+    if os.environ.get("DEERFLOW_PACKAGED") == "1":
+        raise RuntimeError(
+            "Extension installation and removal are disabled in packaged DeerFlow; "
+            "install extensions with your package manager instead."
+        )
+
+
 class ExtensionManager:
     """Install trusted Python extensions into one DeerFlow checkout."""
 
@@ -133,6 +141,7 @@ class ExtensionManager:
 
     def install(self, source: str, *, yes: bool = False, required: bool = False, replace: bool = False) -> InstalledExtension:
         """Install an extension source and enable its packaging entry point."""
+        _require_unmanaged_installation()
         with _manager_lock(self.project_root):
             return self._install(source, yes=yes, required=required, replace=replace)
 
@@ -327,6 +336,7 @@ class ExtensionManager:
 
     def remove(self, identifier: str) -> str:
         """Uninstall one managed distribution and remove its activation entry."""
+        _require_unmanaged_installation()
         with _manager_lock(self.project_root):
             return self._remove(identifier)
 

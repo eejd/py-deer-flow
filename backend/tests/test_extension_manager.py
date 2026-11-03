@@ -31,6 +31,15 @@ from deerflow.extensions.manager import (
 from deerflow.tui.cli import main as deerflow_main
 
 
+@pytest.mark.parametrize("operation", ["install", "upgrade", "remove"])
+def test_packaged_extension_mutations_fail_before_touching_project(tmp_path, monkeypatch, operation):
+    monkeypatch.setenv("DEERFLOW_PACKAGED", "1")
+    manager = ExtensionManager(tmp_path)
+    with pytest.raises(RuntimeError, match="install extensions with your package manager"):
+        getattr(manager, operation)("example")
+    assert list(tmp_path.iterdir()) == []
+
+
 def _write_local_extension(
     source: Path,
     *,
