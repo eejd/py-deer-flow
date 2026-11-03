@@ -252,7 +252,7 @@ async def test_durable_task_call_sends_one_authorization_header():
         }
     )
     opened: dict[str, str] = {}
-    result = SimpleNamespace(structuredContent={"task_id": "remote-1", "status": "running"}, isError=False)
+    result = SimpleNamespace(structured_content={"task_id": "remote-1", "status": "running"}, is_error=False)
 
     class _SessionContext:
         def __init__(self, connection, **_kwargs):

@@ -81,7 +81,7 @@ def test_build_server_params_http_like_requires_url(transport: str):
 def test_build_server_params_rejects_unsupported_transport():
     config = McpServerConfig(type="websocket")
 
-    with pytest.raises(ValueError, match="unsupported transport type"):
+    with pytest.raises(ValueError, match="WebSocket transport is not supported by MCP 2"):
         build_server_params("bad-transport", config)
 
 

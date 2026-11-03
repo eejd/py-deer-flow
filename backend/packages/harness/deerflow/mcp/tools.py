@@ -6,7 +6,6 @@ import asyncio
 import logging
 import re
 from collections.abc import Iterable, Mapping
-from datetime import timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -420,9 +419,9 @@ def _convert_call_tool_result(
         if isinstance(item, TextContent):
             lc_content.append(create_text_block(text=_resolve_text(item.text)))
         elif isinstance(item, ImageContent):
-            lc_content.append(create_image_block(base64=item.data, mime_type=item.mimeType))
+            lc_content.append(create_image_block(base64=item.data, mime_type=item.mime_type))
         elif isinstance(item, ResourceLink):
-            mime = item.mimeType or None
+            mime = item.mime_type or None
             url = _resolve_link_url(str(item.uri))
             if mime and mime.startswith("image/"):
                 lc_content.append(create_image_block(url=url, mime_type=mime))
@@ -435,7 +434,7 @@ def _convert_call_tool_result(
             if isinstance(res, TextResourceContents):
                 lc_content.append(create_text_block(text=_resolve_text(res.text)))
             elif isinstance(res, BlobResourceContents):
-                mime = res.mimeType or None
+                mime = res.mime_type or None
                 if mime and mime.startswith("image/"):
                     lc_content.append(create_image_block(base64=res.blob, mime_type=mime))
                 else:
@@ -445,13 +444,13 @@ def _convert_call_tool_result(
         else:
             lc_content.append(create_text_block(text=str(item)))
 
-    if call_tool_result.isError:
+    if call_tool_result.is_error:
         error_parts = [item["text"] for item in lc_content if isinstance(item, dict) and item.get("type") == "text"]
         raise ToolException("\n".join(error_parts) if error_parts else str(lc_content))
 
     artifact = None
-    if call_tool_result.structuredContent is not None:
-        artifact = {"structured_content": call_tool_result.structuredContent}
+    if call_tool_result.structured_content is not None:
+        artifact = {"structured_content": call_tool_result.structured_content}
 
     return lc_content, artifact
 
@@ -572,7 +571,7 @@ def _make_session_pool_tool(
         # existing call-sites that assert on exact arguments are not affected.
         call_kwargs: dict[str, Any] = {}
         if tool_call_timeout:
-            call_kwargs["read_timeout_seconds"] = timedelta(seconds=tool_call_timeout)
+            call_kwargs["read_timeout_seconds"] = tool_call_timeout
 
         if tool_interceptors:
             from langchain_mcp_adapters.interceptors import MCPToolCallRequest

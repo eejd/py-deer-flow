@@ -18,9 +18,9 @@ class FakeCaller:
 
 def _result(structured_content, *, text="ignored", is_error=False):
     return SimpleNamespace(
-        structuredContent=structured_content,
+        structured_content=structured_content,
         content=[SimpleNamespace(type="text", text=text)],
-        isError=is_error,
+        is_error=is_error,
     )
 
 

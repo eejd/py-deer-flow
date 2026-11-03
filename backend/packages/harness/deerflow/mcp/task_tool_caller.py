@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Mapping
-from datetime import timedelta
 from typing import Any
 
 from deerflow.config.extensions_config import ExtensionsConfig
@@ -188,7 +187,7 @@ class McpTaskToolCaller:
         async def execute(request: MCPToolCallRequest) -> Any:
             call_kwargs: dict[str, Any] = {}
             if timeout_seconds:
-                call_kwargs["read_timeout_seconds"] = timedelta(seconds=timeout_seconds)
+                call_kwargs["read_timeout_seconds"] = timeout_seconds
 
             if persistent_session:
                 assert session is not None and pool is not None

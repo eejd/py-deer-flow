@@ -49,7 +49,7 @@ from typing import Any
 
 import anyio
 from mcp import ClientSession
-from mcp.shared.exceptions import McpError
+from mcp.shared.exceptions import MCPError
 from mcp.types import CONNECTION_CLOSED
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ _MCP_CLOSED_STREAM_ERRORS = (
 def _is_mcp_transport_disconnect(error: Exception) -> bool:
     if isinstance(error, _MCP_CLOSED_STREAM_ERRORS):
         return True
-    return isinstance(error, McpError) and error.error.code == CONNECTION_CLOSED and error.error.message == "Connection closed"
+    return isinstance(error, MCPError) and error.error.code == CONNECTION_CLOSED and error.error.message == "Connection closed"
 
 
 async def _finish_session_cleanup(cleanup: asyncio.Task[Any], server_name: str) -> bool:

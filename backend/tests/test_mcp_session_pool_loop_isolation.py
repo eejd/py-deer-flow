@@ -177,7 +177,7 @@ def test_cleanup_cancels_inflight_owners_on_both_loops(loop_pool, monkeypatch, o
 def test_parallel_sync_wrappers_complete_real_stdio_calls(tmp_path):
     server = tmp_path / "echo_server.py"
     server.write_text(
-        'from mcp.server.fastmcp import FastMCP\nmcp = FastMCP("echo")\n@mcp.tool()\ndef echo(text: str) -> str:\n    return text\nmcp.run(transport="stdio")\n',
+        'from fastmcp import FastMCP\nmcp = FastMCP("echo")\n@mcp.tool()\ndef echo(text: str) -> str:\n    return text\nmcp.run(transport="stdio")\n',
         encoding="utf-8",
     )
     pool = MCPSessionPool()

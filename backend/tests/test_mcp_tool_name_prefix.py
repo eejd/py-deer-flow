@@ -142,7 +142,7 @@ async def test_unprefixed_stdio_tool_keeps_server_like_original_name(tmp_path: P
     """Pooling must not strip a prefix that belongs to the MCP tool itself."""
     original_tool = _tool("github_search")
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_pool = MagicMock()
     mock_pool.get_session = AsyncMock(return_value=mock_session)
 

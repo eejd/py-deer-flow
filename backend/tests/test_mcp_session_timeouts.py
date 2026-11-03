@@ -220,7 +220,7 @@ def test_gateway_response_model_session_init_timeout_default_matches_runtime_con
 async def test_session_init_timeout_does_not_block_fast_session(tmp_path) -> None:
     """A promptly-initialized session still completes the tool call."""
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_pool = MagicMock()
     mock_pool.get_session = AsyncMock(return_value=mock_session)
 

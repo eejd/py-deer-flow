@@ -623,7 +623,7 @@ def _task_caller(config: ExtensionsConfig) -> tuple[Any, dict[str, str], Any]:
     from deerflow.mcp.task_tool_caller import McpTaskToolCaller
 
     opened: dict[str, str] = {}
-    result = SimpleNamespace(structuredContent={"task_id": "remote-1", "status": "running"}, isError=False)
+    result = SimpleNamespace(structured_content={"task_id": "remote-1", "status": "running"}, is_error=False)
 
     class _SessionContext:
         def __init__(self, connection, **_kwargs):
@@ -751,7 +751,7 @@ async def test_durable_task_calls_are_not_denied_for_a_missing_run_context():
             }
         }
     )
-    result = SimpleNamespace(structuredContent={"task_id": "remote-1", "status": "running"}, isError=False)
+    result = SimpleNamespace(structured_content={"task_id": "remote-1", "status": "running"}, is_error=False)
     session = SimpleNamespace(initialize=AsyncMock(), call_tool=AsyncMock(return_value=result))
 
     class _SessionContext:

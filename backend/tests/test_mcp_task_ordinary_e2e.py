@@ -29,24 +29,24 @@ class FakeMcpServer:
     async def call_tool(self, *, tool_name, arguments, **_scope):
         if tool_name == "submit_report":
             return SimpleNamespace(
-                structuredContent={"task_id": arguments["remote_id"], "status": "running"},
+                structured_content={"task_id": arguments["remote_id"], "status": "running"},
                 content=[],
-                isError=False,
+                is_error=False,
             )
         if tool_name == "status_report":
             status_result = self.status_results.pop(0)
             if not isinstance(status_result, dict):
                 return status_result
             return SimpleNamespace(
-                structuredContent=status_result,
+                structured_content=status_result,
                 content=[],
-                isError=False,
+                is_error=False,
             )
         if tool_name == "cancel_report":
             return SimpleNamespace(
-                structuredContent={"task_id": arguments["task_id"], "status": "cancelled"},
+                structured_content={"task_id": arguments["task_id"], "status": "cancelled"},
                 content=[],
-                isError=False,
+                is_error=False,
             )
         raise AssertionError(tool_name)
 
@@ -158,9 +158,9 @@ async def test_status_tool_error_retries_with_detail_before_structured_failure_t
     fake_server.status_results.extend(
         [
             SimpleNamespace(
-                structuredContent=None,
+                structured_content=None,
                 content=[SimpleNamespace(type="text", text="upstream temporarily unavailable")],
-                isError=True,
+                is_error=True,
             ),
             {
                 "task_id": "remote-fail",

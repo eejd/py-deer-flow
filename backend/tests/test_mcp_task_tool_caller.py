@@ -2,15 +2,14 @@ import asyncio
 import sys
 from collections.abc import Coroutine
 from contextlib import suppress
-from datetime import timedelta
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import anyio
 import pytest
-from mcp.shared.exceptions import McpError
-from mcp.types import CONNECTION_CLOSED, ErrorData
+from mcp.shared.exceptions import MCPError
+from mcp.types import CONNECTION_CLOSED, REQUEST_TIMEOUT
 
 from deerflow.config.extensions_config import ExtensionsConfig
 from deerflow.config.paths import Paths
@@ -84,7 +83,7 @@ def test_task_session_scope_includes_user_and_thread() -> None:
 
 @pytest.mark.asyncio
 async def test_stdio_task_call_reuses_exact_scope_and_raw_tool_name() -> None:
-    result = SimpleNamespace(structuredContent={"task_id": "remote-1", "status": "running"}, isError=False)
+    result = SimpleNamespace(structured_content={"task_id": "remote-1", "status": "running"}, is_error=False)
     session = SimpleNamespace(call_tool=AsyncMock(return_value=result))
     pool = MagicMock()
     pool.get_session = AsyncMock(return_value=session)
@@ -123,7 +122,7 @@ async def test_stdio_task_call_reuses_exact_scope_and_raw_tool_name() -> None:
         anyio.ClosedResourceError(),
         anyio.BrokenResourceError(),
         anyio.EndOfStream(),
-        McpError(ErrorData(code=CONNECTION_CLOSED, message="Connection closed")),
+        MCPError(CONNECTION_CLOSED, "Connection closed"),
     ],
 )
 async def test_broken_stdio_task_session_is_evicted_for_next_poll_reconnect(disconnect_error: Exception) -> None:
@@ -160,7 +159,7 @@ async def test_broken_stdio_task_session_is_evicted_for_next_poll_reconnect(disc
 
 @pytest.mark.asyncio
 async def test_stdio_task_timeout_keeps_healthy_stateful_session() -> None:
-    timeout_error = McpError(ErrorData(code=408, message="request timed out"))
+    timeout_error = MCPError(408, "request timed out")
     session = SimpleNamespace(call_tool=AsyncMock(side_effect=timeout_error))
     pool = MagicMock()
     pool.get_session = AsyncMock(return_value=session)
@@ -174,7 +173,7 @@ async def test_stdio_task_timeout_keeps_healthy_stateful_session() -> None:
             "deerflow.mcp.task_tool_caller._prepare_stdio_connection",
             return_value={"transport": "stdio", "command": "report-mcp"},
         ),
-        pytest.raises(McpError, match="request timed out"),
+        pytest.raises(MCPError, match="request timed out"),
     ):
         await caller.call_tool(
             server_name="reports",
@@ -229,7 +228,7 @@ async def test_stdio_task_timeout_preserves_real_stateful_session(tmp_path) -> N
 import asyncio
 import os
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 mcp = FastMCP("slow-status")
 tasks = {}
@@ -280,32 +279,32 @@ mcp.run(transport="stdio")
             )
 
             server_config.tool_call_timeout = 0.05
-            with pytest.raises(McpError, match="Timed out while waiting") as exc_info:
+            with pytest.raises(MCPError, match="timed out") as exc_info:
                 await caller.call_tool(
                     server_name="reports",
                     tool_name="status_report",
-                    arguments={"task_id": submitted.structuredContent["task_id"]},
+                    arguments={"task_id": submitted.structured_content["task_id"]},
                     user_id="user-1",
                     thread_id="thread-1",
                 )
-            assert exc_info.value.error.code == 408
+            assert exc_info.value.error.code == REQUEST_TIMEOUT
 
             await asyncio.sleep(0.25)
             server_config.tool_call_timeout = 1.0
             recovered = await caller.call_tool(
                 server_name="reports",
                 tool_name="status_report",
-                arguments={"task_id": submitted.structuredContent["task_id"]},
+                arguments={"task_id": submitted.structured_content["task_id"]},
                 user_id="user-1",
                 thread_id="thread-1",
             )
     finally:
         await pool.close_all()
 
-    assert recovered.structuredContent == {
+    assert recovered.structured_content == {
         "task_id": "remote-1",
         "status": "completed",
-        "pid": submitted.structuredContent["pid"],
+        "pid": submitted.structured_content["pid"],
         "status_calls": 2,
     }
 
@@ -344,7 +343,7 @@ async def test_stdio_task_session_initialization_respects_configured_timeout() -
 
 @pytest.mark.asyncio
 async def test_http_task_call_authenticates_session_initialization() -> None:
-    result = SimpleNamespace(structuredContent={"task_id": "remote-1", "status": "running"}, isError=False)
+    result = SimpleNamespace(structured_content={"task_id": "remote-1", "status": "running"}, is_error=False)
     session = SimpleNamespace(
         initialize=AsyncMock(),
         call_tool=AsyncMock(return_value=result),
@@ -464,5 +463,5 @@ async def test_remote_task_call_respects_configured_timeout(transport: str) -> N
     session.call_tool.assert_awaited_once_with(
         "status_report",
         {"task_id": "remote-1"},
-        read_timeout_seconds=timedelta(seconds=0.01),
+        read_timeout_seconds=0.01,
     )

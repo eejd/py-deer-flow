@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import anyio
 import pytest
-from mcp.shared.exceptions import McpError
+from mcp.shared.exceptions import MCPError
 from mcp.types import CONNECTION_CLOSED, CallToolResult, ErrorData, TextContent
 
 from deerflow.mcp.session_pool import MCPSessionPool, call_pooled_session_tool, get_session_pool, reset_session_pool
@@ -436,7 +436,7 @@ import os
 import sys
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 marker = Path(sys.argv[1])
 mcp = FastMCP("crash-once")
@@ -473,7 +473,7 @@ mcp.run(transport="stdio")
 
     with patch("deerflow.mcp.tools.get_paths", return_value=Paths(tmp_path)):
         wrapped = _make_session_pool_tool(original_tool, "crash", connection)
-        with pytest.raises(McpError, match="Connection closed") as exc_info:
+        with pytest.raises(MCPError, match="Connection closed") as exc_info:
             await wrapped.coroutine(runtime=runtime)
 
         assert exc_info.value.error.code == CONNECTION_CLOSED
@@ -517,7 +517,7 @@ async def test_session_pool_tool_evicts_connection_closed_through_interceptor(tm
     async def passthrough(request, handler):
         return await handler(request)
 
-    error = McpError(ErrorData(code=CONNECTION_CLOSED, message="Connection closed"))
+    error = MCPError(CONNECTION_CLOSED, "Connection closed")
     pool = MagicMock()
     wrapped, session = _make_test_pool_tool(
         pool=pool,
@@ -527,7 +527,7 @@ async def test_session_pool_tool_evicts_connection_closed_through_interceptor(tm
 
     with (
         patch("deerflow.mcp.tools.get_paths", return_value=Paths(tmp_path)),
-        pytest.raises(McpError, match="Connection closed"),
+        pytest.raises(MCPError, match="Connection closed"),
     ):
         await wrapped.coroutine(value=1)
 
@@ -538,8 +538,8 @@ async def test_session_pool_tool_evicts_connection_closed_through_interceptor(tm
 @pytest.mark.parametrize(
     "error",
     [
-        McpError(ErrorData(code=408, message="request timed out")),
-        McpError(ErrorData(code=CONNECTION_CLOSED, message="server-specific failure")),
+        MCPError(408, "request timed out"),
+        MCPError(CONNECTION_CLOSED, "server-specific failure"),
     ],
 )
 async def test_session_pool_tool_keeps_session_after_nonfatal_mcp_error(tmp_path, error):
@@ -551,7 +551,7 @@ async def test_session_pool_tool_keeps_session_after_nonfatal_mcp_error(tmp_path
 
     with (
         patch("deerflow.mcp.tools.get_paths", return_value=Paths(tmp_path)),
-        pytest.raises(McpError, match=str(error)),
+        pytest.raises(MCPError, match=str(error)),
     ):
         await wrapped.coroutine(value=1)
 
@@ -760,7 +760,7 @@ async def test_session_pool_tool_wrapping():
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
@@ -804,7 +804,7 @@ async def test_session_pool_tool_pins_cwd_and_temp_env(tmp_path):
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
@@ -860,7 +860,7 @@ async def test_session_pool_tool_does_not_override_explicit_tmpdir(tmp_path):
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
@@ -906,7 +906,7 @@ async def test_session_pool_tool_does_not_override_explicit_cwd(tmp_path):
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
@@ -954,7 +954,7 @@ async def test_session_pool_tool_skips_fs_work_for_non_stdio_transport(tmp_path)
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
@@ -1005,7 +1005,7 @@ async def test_session_pool_tool_skips_after_walk_when_no_text_content(tmp_path)
     # nothing to do and the second recursive walk should not run.
     from mcp.types import ImageContent
 
-    image_result = MagicMock(content=[ImageContent(type="image", data="QUJD", mimeType="image/png")], isError=False, structuredContent=None)
+    image_result = MagicMock(content=[ImageContent(type="image", data="QUJD", mime_type="image/png")], is_error=False, structured_content=None)
     mock_session = AsyncMock()
     mock_session.call_tool = AsyncMock(return_value=image_result)
     mock_cm = MagicMock()
@@ -1051,7 +1051,7 @@ async def test_session_pool_tool_runs_after_walk_when_text_content_present(tmp_p
 
     from mcp.types import TextContent
 
-    text_result = MagicMock(content=[TextContent(type="text", text="Saved as shot.png")], isError=False, structuredContent=None)
+    text_result = MagicMock(content=[TextContent(type="text", text="Saved as shot.png")], is_error=False, structured_content=None)
     mock_session = AsyncMock()
     mock_session.call_tool = AsyncMock(return_value=text_result)
     mock_cm = MagicMock()
@@ -1098,7 +1098,7 @@ async def test_session_pool_tool_forwards_interceptor_headers():
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
@@ -1138,7 +1138,7 @@ async def test_session_pool_interceptor_reads_request_scoped_secret():
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
@@ -1193,7 +1193,7 @@ async def test_session_pool_tool_no_headers_omits_meta():
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
@@ -1237,7 +1237,7 @@ async def test_session_pool_tool_ignores_unsupported_header_type(caplog):
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
@@ -1278,7 +1278,7 @@ async def test_session_pool_tool_extracts_thread_id():
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
@@ -1319,7 +1319,7 @@ async def test_session_pool_tool_default_scope():
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
@@ -1354,7 +1354,7 @@ async def test_session_pool_tool_get_config_fallback():
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
@@ -1394,7 +1394,7 @@ def test_session_pool_tool_sync_wrapper_path_is_safe():
     )
 
     mock_session = AsyncMock()
-    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], isError=False, structuredContent=None))
+    mock_session.call_tool = AsyncMock(return_value=MagicMock(content=[], is_error=False, structured_content=None))
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_session)
     mock_cm.__aexit__ = AsyncMock(return_value=False)

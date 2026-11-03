@@ -48,6 +48,8 @@ def build_server_params(server_name: str, config: McpServerConfig) -> dict[str, 
                 if reason is not None:
                     raise ValueError(f"MCP server '{server_name}' has a header '{header_name}' that cannot be sent as an HTTP header value: it {reason}")
             params["headers"] = config.headers
+    elif transport_type in ("websocket", "ws", "wss"):
+        raise ValueError(f"MCP server '{server_name}': WebSocket transport is not supported by MCP 2")
     else:
         raise ValueError(f"MCP server '{server_name}' has unsupported transport type: {transport_type}")
 

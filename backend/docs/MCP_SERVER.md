@@ -2,6 +2,9 @@
 
 DeerFlow supports configurable MCP servers and skills to extend its capabilities, which are loaded from a dedicated `extensions_config.json` file in the project root directory.
 
+This build targets MCP 2 and supports stdio, SSE, and Streamable HTTP transports.
+WebSocket MCP configurations are unsupported by MCP 2 and are rejected.
+
 ## Setup
 
 1. Copy `extensions_config.example.json` to `extensions_config.json` in the project root directory.

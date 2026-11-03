@@ -104,12 +104,12 @@ def _first_error_text(call_result: Any) -> str | None:
 
 
 def _structured_content(call_result: Any, *, tool_name: str) -> Any:
-    if bool(getattr(call_result, "isError", False)):
+    if bool(getattr(call_result, "is_error", False)):
         message = f"MCP task tool {tool_name!r} returned an error"
         if detail := _first_error_text(call_result):
             message = f"{message}: {detail}"
         raise RuntimeError(message)
-    value = getattr(call_result, "structuredContent", None)
+    value = getattr(call_result, "structured_content", None)
     if value is None:
         raise McpTaskProtocolError(f"MCP task tool {tool_name!r} must return structuredContent; text content is not parsed")
     return value
